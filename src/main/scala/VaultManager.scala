@@ -56,7 +56,7 @@ object VaultManager {
       cipher.init(Cipher.DECRYPT_MODE, key)
 
       val fis = new FileInputStream(filePath)
-      val encrypted = Stream.continually(fis.read).takeWhile(_ != -1).map(_.toByte).toArray
+      val encrypted = LazyList.continually(fis.read).takeWhile(_ != -1).map(_.toByte).toArray
       fis.close()
 
       val decrypted = new String(cipher.doFinal(encrypted), "UTF-8")
