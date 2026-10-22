@@ -123,7 +123,7 @@ object Main {
 
           case "list" | "3" =>
             if (!checkAccess(state)) {
-              // ничего не делаем
+              
             } else {
               val sortedRecords = config.defaultSort match {
                 case "service" => state.records.sortBy(_.service.toLowerCase)

@@ -34,5 +34,5 @@ case class AppState(
                      isBlockedPermanently: Boolean = false,
                      lastActivityTime: Long = System.currentTimeMillis(),
                      records: List[Record] = List.empty,
-                     masterPasswordPlain: String = "" // Хранится только в оперативной памяти, не в файлах!
+                     masterPasswordPlain: String = "" // Хранится только в оперативной памяти, не в файлах
                    )
