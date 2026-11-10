@@ -2,13 +2,13 @@ import java.io.{File, FileOutputStream, OutputStreamWriter, PrintWriter}
 import java.time.LocalDateTime
 
 object Logger {
-  private var writer: PrintWriter = null
+  // Заменяем null на None
+  private var writer: Option[PrintWriter] = None
 
   def init(logFile: String): Unit = {
     try {
-      // true означает режим дозаписи (append), чтобы журнал не перезаписывался при каждом запуске
       val fos = new FileOutputStream(new File(logFile), true)
-      writer = new PrintWriter(new OutputStreamWriter(fos, "UTF-8"))
+      writer = Some(new PrintWriter(new OutputStreamWriter(fos, "UTF-8")))
       log("INFO", "Приложение запущено")
     } catch {
       case e: Exception =>
@@ -17,17 +17,19 @@ object Logger {
   }
 
   def log(level: String, message: String): Unit = {
-    if (writer != null) {
+    writer.foreach { w =>
       val timestamp = LocalDateTime.now().format(dateFormat)
-      writer.println(s"$timestamp $level  $message")
-      writer.flush() // Сразу сбрасываем буфер на диск
+      w.println(s"$timestamp $level  $message")
+      w.flush()
     }
   }
 
   def close(): Unit = {
-    if (writer != null) {
+    writer.foreach { w =>
       log("INFO", "Приложение завершено")
-      writer.close()
+      w.close()
     }
+    
+    writer = None
   }
 }

@@ -1,14 +1,12 @@
-import scala.io.Source
 import java.io.{File, PrintWriter}
+import scala.io.Source
 
 object ConfigManager {
-
-  // Простой парсер для нашего конкретного формата JSON
-  def loadConfig(filePath: String): Either[String, AppConfig] = {
+  
+  def loadConfig(filePath: String): Either[Error, AppConfig] = {
     try {
       val file = new File(filePath)
       if (!file.exists()) {
-        // Если файла нет, создаем конфигурацию по умолчанию
         val defaultConfig = AppConfig(
           storageFile = "password-vault.dat",
           logFile = "password-vault.log",
@@ -33,7 +31,7 @@ object ConfigManager {
 
       validateConfig(config)
     } catch {
-      case e: Exception => Left(s"Ошибка чтения конфигурации: ${e.getMessage}")
+      case e: Exception => Left(Error.ConfigError("config.json", s"Ошибка чтения файла: ${e.getMessage}"))
     }
   }
 
@@ -52,13 +50,19 @@ object ConfigManager {
     regex.findFirstMatchIn(json).map(_.group(1).toBoolean).getOrElse(false)
   }
 
-  private def validateConfig(config: AppConfig): Either[String, AppConfig] = {
-    if (config.storageFile.isEmpty) return Left("Параметр: storageFile. Получено: пусто. Ожидается: путь к файлу.")
-    if (config.logFile.isEmpty) return Left("Параметр: logFile. Получено: пусто. Ожидается: путь к файлу.")
-    if (config.storageFile == config.logFile) return Left("Параметр: storageFile/logFile. Ошибка: файлы хранилища и журнала не могут совпадать.")
-    if (config.automaticLockMinutes < 1) return Left(s"Параметр: automaticLockMinutes. Получено: ${config.automaticLockMinutes}. Ожидается: целое число не меньше 1.")
-    if (config.maximumUnlockAttempts < 1) return Left(s"Параметр: maximumUnlockAttempts. Получено: ${config.maximumUnlockAttempts}. Ожидается: целое число не меньше 1.")
-    if (!List("service", "id", "username").contains(config.defaultSort)) return Left(s"Параметр: defaultSort. Получено: ${config.defaultSort}. Ожидается: service, id или username.")
+  private def validateConfig(config: AppConfig): Either[Error, AppConfig] = {
+    if (config.storageFile.isEmpty)
+      return Left(Error.ConfigError("storageFile", "Путь не указан. Ожидается: строка."))
+    if (config.logFile.isEmpty)
+      return Left(Error.ConfigError("logFile", "Путь не указан. Ожидается: строка."))
+    if (config.storageFile == config.logFile)
+      return Left(Error.ConfigError("storageFile/logFile", "Файлы хранилища и журнала не могут совпадать."))
+    if (config.automaticLockMinutes < 1)
+      return Left(Error.ConfigError("automaticLockMinutes", s"Получено: ${config.automaticLockMinutes}. Ожидается: целое число не меньше 1."))
+    if (config.maximumUnlockAttempts < 1)
+      return Left(Error.ConfigError("maximumUnlockAttempts", s"Получено: ${config.maximumUnlockAttempts}. Ожидается: целое число не меньше 1."))
+    if (!List("service", "id", "username").contains(config.defaultSort))
+      return Left(Error.ConfigError("defaultSort", s"Получено: ${config.defaultSort}. Ожидается: service, id или username."))
 
     Right(config)
   }
